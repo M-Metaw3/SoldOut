@@ -543,6 +543,548 @@
 
 
 
+// import React, { useState } from 'react';
+// import { useQuery, useMutation, useQueryClient } from 'react-query';
+// import {
+//   Box,
+//   Button,
+//   Input,
+//   Table,
+//   Thead,
+//   Tbody,
+//   Tr,
+//   Th,
+//   Td,
+//   useToast,
+//   Flex,
+//   Heading,
+//   Text,
+//   Select,
+// } from '@chakra-ui/react';
+// import { getAuctions, updateCooldown, removeCooldown, setWinner } from '../api'; // Assuming setWinner is your API function
+
+// const AuctionTable = () => {
+//   const queryClient = useQueryClient();
+//   const toast = useToast();
+
+//   const { data: auctions = [], error, isLoading } = useQuery('auctions', getAuctions);
+
+//   const updateCooldownMutation = useMutation(
+//     ({ auctionId, cooldown }) => updateCooldown(auctionId, cooldown),
+//     {
+//       onSuccess: () => {
+//         queryClient.invalidateQueries('auctions');
+//         toast({
+//           title: 'Cooldown updated.',
+//           description: "The auction's cooldown has been updated.",
+//           status: 'success',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//       onError: () => {
+//         toast({
+//           title: 'Error updating cooldown.',
+//           description: 'There was an error updating the cooldown.',
+//           status: 'error',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//     }
+//   );
+
+//   const removeCooldownMutation = useMutation(
+//     (auctionId) => removeCooldown(auctionId),
+//     {
+//       onSuccess: () => {
+//         queryClient.invalidateQueries('auctions');
+//         toast({
+//           title: 'Cooldown removed.',
+//           description: "The auction's cooldown has been removed.",
+//           status: 'success',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//       onError: () => {
+//         toast({
+//           title: 'Error removing cooldown.',
+//           description: 'There was an error removing the cooldown.',
+//           status: 'error',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//     }
+//   );
+
+//   const setWinnerMutation = useMutation(
+//     ({ auctionId, userId, userName }) => setWinner(auctionId, userId, userName), // Assuming setWinner is an API function
+//     {
+//       onSuccess: () => {
+//         queryClient.invalidateQueries('auctions');
+//         toast({
+//           title: 'Winner updated.',
+//           description: "The auction's winner has been updated.",
+//           status: 'success',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//       onError: () => {
+//         toast({
+//           title: 'Error setting winner.',
+//           description: 'There was an error setting the winner.',
+//           status: 'error',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//     }
+//   );
+
+//   const [cooldownInput, setCooldownInput] = useState({});
+//   const [selectedUser, setSelectedUser] = useState({}); // Track selected users for each auction
+
+//   const handleUpdateCooldown = (auctionId) => {
+//     const cooldown = Number(cooldownInput[auctionId]); // Convert to number
+//     if (isNaN(cooldown) || cooldown < 0) {
+//       toast({
+//         title: 'Invalid input.',
+//         description: 'Please enter a valid non-negative number for cooldown.',
+//         status: 'error',
+//         duration: 3000,
+//         isClosable: true,
+//       });
+//       return;
+//     }
+//     updateCooldownMutation.mutate({ auctionId, cooldown });
+//   };
+
+//   const handleRemoveCooldown = (auctionId) => {
+//     removeCooldownMutation.mutate(auctionId);
+//   };
+
+//   const handleSetWinner = (auctionId, userId, userName) => {
+//     setWinnerMutation.mutate({ auctionId, userId, userName });
+//   };
+
+//   if (isLoading) return <Text>Loading...</Text>;
+//   if (error) return <Text>Error loading auctions: {error.message}</Text>;
+
+//   return (
+//     <Box p={5}>
+//       <Heading mb={4}> Sold Out Running Auctions</Heading>
+//       <Table variant="simple" colorScheme="teal">
+//         <Thead>
+//           <Tr>
+//             <Th>ID</Th>
+//             <Th>Cooldown</Th>
+//             <Th>Users</Th>
+//             <Th>Actions</Th>
+//           </Tr>
+//         </Thead>
+//         <Tbody>
+//           {auctions.map((auction) => (
+//             <Tr key={auction.id}>
+//               <Td>{auction.id}</Td>
+//               <Td>
+//                 {auction.cooldown !== undefined ? (
+//                   <Text>{auction.cooldown}</Text>
+//                 ) : (
+//                   <Text color="gray.500">None</Text>
+//                 )}
+//               </Td>
+//               <Td>
+//                 {/* Select a user as the winner */}
+//                 {auction.users.length > 0 ? (
+//                   <Select
+//                   color={'black'}
+//                     placeholder="Select user"
+//                     value={selectedUser[auction.id] || ''}
+//                     onChange={(e) =>
+//                       setSelectedUser({
+//                         ...selectedUser,
+//                         [auction.id]: e.target.value,
+//                       })
+//                     }
+//                   >
+//                     {auction.users.map((user) => (
+//                       <option key={user.user_id} value={user.user_id}>
+//                         {user.user_name}
+//                       </option>
+//                     ))}
+//                   </Select>
+//                 ) : (
+//                   <Text color="gray.500">No users available</Text>
+//                 )}
+//               </Td>
+//               <Td>
+//                 <Flex direction="row" gap={2}>
+//                   {auction.cooldown !== undefined && (
+//                     <Button
+//                       colorScheme="red"
+//                       onClick={() => handleRemoveCooldown(auction.id)}
+//                     >
+//                       Remove Cooldown
+//                     </Button>
+//                   )}
+//                   <Input
+//                     type="number"
+//                     placeholder="Set Cooldown"
+//                     value={cooldownInput[auction.id] || ''}
+//                     onChange={(e) =>
+//                       setCooldownInput({
+//                         ...cooldownInput,
+//                         [auction.id]: e.target.value,
+//                       })
+//                     }
+//                     size="sm"
+//                     maxWidth="150px"
+//                   />
+//                   <Button
+//                     colorScheme="blue"
+//                     onClick={() => handleUpdateCooldown(auction.id)}
+//                   >
+//                     Update Cooldown
+//                   </Button>
+//                   <Button
+//                     colorScheme="green"
+//                     onClick={() =>
+//                       handleSetWinner(
+//                         auction.id,
+//                         selectedUser[auction.id],
+//                         auction.users.find(
+//                           (user) => user.user_id === selectedUser[auction.id]
+//                         )?.user_name
+//                       )
+//                     }
+//                     isDisabled={!selectedUser[auction.id]}
+//                   >
+//                     Set Winner
+//                   </Button>
+//                 </Flex>
+//               </Td>
+//             </Tr>
+//           ))}
+//         </Tbody>
+//       </Table>
+//     </Box>
+//   );
+// };
+
+// export default AuctionTable;
+
+
+
+
+
+
+
+
+
+// import React, { useState } from 'react';
+// import { useQuery, useMutation, useQueryClient } from 'react-query';
+// import {
+//   Box,
+//   Button,
+//   Input,
+//   Table,
+//   Thead,
+//   Tbody,
+//   Tr,
+//   Th,
+//   Td,
+//   useToast,
+//   Flex,
+//   Heading,
+//   Text,
+//   Select,
+// } from '@chakra-ui/react';
+// import { getAuctions, updateCooldown, removeCooldown, setWinner, removeWinner } from '../api'; // Assume these API functions are available
+
+// const AuctionTable = () => {
+//   const queryClient = useQueryClient();
+//   const toast = useToast();
+
+//   // Fetch auctions from API
+//   const { data: auctions = [], error, isLoading } = useQuery('auctions', getAuctions);
+
+//   // Mutation for updating cooldown
+//   const updateCooldownMutation = useMutation(
+//     ({ auctionId, cooldown }) => updateCooldown(auctionId, cooldown),
+//     {
+//       onSuccess: () => {
+//         queryClient.invalidateQueries('auctions');
+//         toast({
+//           title: 'Cooldown updated.',
+//           description: "The auction's cooldown has been updated.",
+//           status: 'success',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//       onError: () => {
+//         toast({
+//           title: 'Error updating cooldown.',
+//           description: 'There was an error updating the cooldown.',
+//           status: 'error',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//     }
+//   );
+
+//   // Mutation for removing cooldown
+//   const removeCooldownMutation = useMutation(
+//     (auctionId) => removeCooldown(auctionId),
+//     {
+//       onSuccess: () => {
+//         queryClient.invalidateQueries('auctions');
+//         toast({
+//           title: 'Cooldown removed.',
+//           description: "The auction's cooldown has been removed.",
+//           status: 'success',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//       onError: () => {
+//         toast({
+//           title: 'Error removing cooldown.',
+//           description: 'There was an error removing the cooldown.',
+//           status: 'error',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//     }
+//   );
+
+//   // Mutation for setting winner
+//   const setWinnerMutation = useMutation(
+//     ({ auctionId, userId, userName }) => setWinner(auctionId, userId, userName),
+//     {
+//       onSuccess: () => {
+//         queryClient.invalidateQueries('auctions');
+//         toast({
+//           title: 'Winner updated.',
+//           description: "The auction's winner has been updated.",
+//           status: 'success',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//       onError: () => {
+//         toast({
+//           title: 'Error setting winner.',
+//           description: 'There was an error setting the winner.',
+//           status: 'error',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//     }
+//   );
+
+//   // Mutation for removing winner
+//   const removeWinnerMutation = useMutation(
+//     (auctionId) => removeWinner(auctionId),
+//     {
+//       onSuccess: () => {
+//         queryClient.invalidateQueries('auctions');
+//         toast({
+//           title: 'Winner removed.',
+//           description: "The auction's winner has been removed.",
+//           status: 'success',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//       onError: () => {
+//         toast({
+//           title: 'Error removing winner.',
+//           description: 'There was an error removing the winner.',
+//           status: 'error',
+//           duration: 3000,
+//           isClosable: true,
+//         });
+//       },
+//     }
+//   );
+
+//   const [cooldownInput, setCooldownInput] = useState({});
+//   const [selectedUser, setSelectedUser] = useState({}); // Track selected users for each auction
+
+//   // Update cooldown handler
+//   const handleUpdateCooldown = (auctionId) => {
+//     const cooldown = Number(cooldownInput[auctionId]); // Convert to number
+//     if (isNaN(cooldown) || cooldown < 0) {
+//       toast({
+//         title: 'Invalid input.',
+//         description: 'Please enter a valid non-negative number for cooldown.',
+//         status: 'error',
+//         duration: 3000,
+//         isClosable: true,
+//       });
+//       return;
+//     }
+//     updateCooldownMutation.mutate({ auctionId, cooldown });
+//   };
+
+//   // Remove cooldown handler
+//   const handleRemoveCooldown = (auctionId) => {
+//     removeCooldownMutation.mutate(auctionId);
+//   };
+
+//   // Set winner handler
+//   const handleSetWinner = (auctionId, userId, userName) => {
+//     setWinnerMutation.mutate({ auctionId, userId, userName });
+//   };
+
+//   // Remove winner handler
+//   const handleRemoveWinner = (auctionId) => {
+//     removeWinnerMutation.mutate(auctionId);
+//   };
+
+//   if (isLoading) return <Text>Loading...</Text>;
+//   if (error) return <Text>Error loading auctions: {error.message}</Text>;
+
+//   return (
+//     <Box p={5}>
+//       <Heading mb={4}>Running Auctions</Heading>
+//       <Table variant="simple" colorScheme="teal">
+//         <Thead>
+//           <Tr>
+//             <Th>ID</Th>
+//             <Th>Cooldown</Th>
+//             <Th>Users</Th>
+//             <Th>Winner</Th>
+//             <Th>Actions</Th>
+//           </Tr>
+//         </Thead>
+//         <Tbody>
+//           {auctions.map((auction) => (
+//             <Tr key={auction.id}>
+//               <Td>{auction.id}</Td>
+//               <Td>
+//                 {auction.cooldown !== undefined ? (
+//                   <Text>{auction.cooldown}</Text>
+//                 ) : (
+//                   <Text color="gray.500">None</Text>
+//                 )}
+//               </Td>
+//               <Td>
+//                 {auction.users.length > 0 ? (
+//                   <Select
+//                   color={'black'}
+                  
+//                     placeholder="Select user"
+//                     value={selectedUser[auction.id] || ''}
+//                     onChange={(e) =>
+//                       setSelectedUser({
+//                         ...selectedUser,
+//                         [auction.id]: e.target.value,
+//                       })
+//                     }
+//                   >
+//                     {auction.users.map((user) => (
+//                       <option key={user.user_id} value={user.user_id}>
+//                         {user.user_name}
+//                       </option>
+//                     ))}
+//                   </Select>
+//                 ) : (
+//                   <Text color="gray.500">No users available</Text>
+//                 )}
+//               </Td>
+//               <Td>
+//                 {auction.userwinnerid ? (
+//                   <Text>{`Winner: ${auction.userwinnerid}`}</Text>
+//                 ) : (
+//                   <Text color="gray.500">No winner selected</Text>
+//                 )}
+//               </Td>
+//               <Td>
+//                 <Flex direction="row" gap={2}>
+//                   <Button
+//                     colorScheme="green"
+//                     onClick={() =>
+//                       handleSetWinner(
+//                         auction.id,
+//                         selectedUser[auction.id],
+//                         auction.users.find(
+//                           (user) => user.user_id === selectedUser[auction.id]
+//                         )?.user_name
+//                       )
+//                     }
+//                     isDisabled={!selectedUser[auction.id]}
+//                   >
+//                     Set Winner
+//                   </Button>
+//                   {auction.userwinnerid && (
+//                     <Button
+//                       colorScheme="red"
+//                       onClick={() => handleRemoveWinner(auction.id)}
+//                     >
+//                       Remove Winner
+//                     </Button>
+//                   )}
+//                   <Input
+//                     type="number"
+//                     placeholder="Set Cooldown"
+//                     value={cooldownInput[auction.id] || ''}
+//                     onChange={(e) =>
+//                       setCooldownInput({
+//                         ...cooldownInput,
+//                         [auction.id]: e.target.value,
+//                       })
+//                     }
+//                     size="sm"
+//                     maxWidth="150px"
+//                   />
+//                   <Button
+//                     colorScheme="blue"
+//                     onClick={() => handleUpdateCooldown(auction.id)}
+//                   >
+//                     Update Cooldown
+//                   </Button>
+//                   {auction.cooldown !== undefined && (
+//                     <Button
+//                       colorScheme="red"
+//                       onClick={() => handleRemoveCooldown(auction.id)}
+//                     >
+//                       Remove Cooldown
+//                     </Button>
+//                   )}
+//                 </Flex>
+//               </Td>
+//             </Tr>
+//           ))}
+//         </Tbody>
+//       </Table>
+//     </Box>
+//   );
+// };
+
+// export default AuctionTable;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import {
@@ -561,14 +1103,16 @@ import {
   Text,
   Select,
 } from '@chakra-ui/react';
-import { getAuctions, updateCooldown, removeCooldown, setWinner } from '../api'; // Assuming setWinner is your API function
+import { getAuctions, updateCooldown, removeCooldown, setWinner, removeWinner } from '../api'; // Assume these API functions are available
 
 const AuctionTable = () => {
   const queryClient = useQueryClient();
   const toast = useToast();
 
+  // Fetch auctions from API
   const { data: auctions = [], error, isLoading } = useQuery('auctions', getAuctions);
 
+  // Mutation for updating cooldown
   const updateCooldownMutation = useMutation(
     ({ auctionId, cooldown }) => updateCooldown(auctionId, cooldown),
     {
@@ -594,6 +1138,7 @@ const AuctionTable = () => {
     }
   );
 
+  // Mutation for removing cooldown
   const removeCooldownMutation = useMutation(
     (auctionId) => removeCooldown(auctionId),
     {
@@ -619,8 +1164,9 @@ const AuctionTable = () => {
     }
   );
 
+  // Mutation for setting winner
   const setWinnerMutation = useMutation(
-    ({ auctionId, userId, userName }) => setWinner(auctionId, userId, userName), // Assuming setWinner is an API function
+    ({ auctionId, userId, userName }) => setWinner(auctionId, userId, userName),
     {
       onSuccess: () => {
         queryClient.invalidateQueries('auctions');
@@ -644,9 +1190,36 @@ const AuctionTable = () => {
     }
   );
 
+  // Mutation for removing winner
+  const removeWinnerMutation = useMutation(
+    (auctionId) => removeWinner(auctionId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries('auctions');
+        toast({
+          title: 'Winner removed.',
+          description: "The auction's winner has been removed.",
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      },
+      onError: () => {
+        toast({
+          title: 'Error removing winner.',
+          description: 'There was an error removing the winner.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      },
+    }
+  );
+
   const [cooldownInput, setCooldownInput] = useState({});
   const [selectedUser, setSelectedUser] = useState({}); // Track selected users for each auction
 
+  // Update cooldown handler
   const handleUpdateCooldown = (auctionId) => {
     const cooldown = Number(cooldownInput[auctionId]); // Convert to number
     if (isNaN(cooldown) || cooldown < 0) {
@@ -662,12 +1235,19 @@ const AuctionTable = () => {
     updateCooldownMutation.mutate({ auctionId, cooldown });
   };
 
+  // Remove cooldown handler
   const handleRemoveCooldown = (auctionId) => {
     removeCooldownMutation.mutate(auctionId);
   };
 
+  // Set winner handler
   const handleSetWinner = (auctionId, userId, userName) => {
     setWinnerMutation.mutate({ auctionId, userId, userName });
+  };
+
+  // Remove winner handler
+  const handleRemoveWinner = (auctionId) => {
+    removeWinnerMutation.mutate(auctionId);
   };
 
   if (isLoading) return <Text>Loading...</Text>;
@@ -675,13 +1255,14 @@ const AuctionTable = () => {
 
   return (
     <Box p={5}>
-      <Heading mb={4}> Sold Out Running Auctions</Heading>
+      <Heading mb={4}>Running Auctions</Heading>
       <Table variant="simple" colorScheme="teal">
         <Thead>
           <Tr>
             <Th>ID</Th>
             <Th>Cooldown</Th>
             <Th>Users</Th>
+            <Th>Winner</Th>
             <Th>Actions</Th>
           </Tr>
         </Thead>
@@ -697,10 +1278,9 @@ const AuctionTable = () => {
                 )}
               </Td>
               <Td>
-                {/* Select a user as the winner */}
                 {auction.users.length > 0 ? (
                   <Select
-                  color={'black'}
+                    color={'black'}
                     placeholder="Select user"
                     value={selectedUser[auction.id] || ''}
                     onChange={(e) =>
@@ -721,13 +1301,42 @@ const AuctionTable = () => {
                 )}
               </Td>
               <Td>
+                {auction.userwinnerid ? (
+                  <>
+                  <Text color={'yellow'}>{`Winnerid: ${auction?.userwinnerid}`}</Text>
+                  <Text color={'yellow'}>{`WinnerName: ${auction?.user_winner_name}`}</Text>
+                  </>
+                ) : (
+                  <Text color="gray.500">No winner selected</Text>
+                )}
+              </Td>
+              <Td>
                 <Flex direction="row" gap={2}>
-                  {auction.cooldown !== undefined && (
+                <Button
+  colorScheme="green"
+  onClick={() => {
+    const selectedUserId = selectedUser[auction.id];
+    const foundUser = auction.users.find((user) => user.id === selectedUserId);
+    console.log("Selected User ID:", selectedUserId); // Log selected user ID
+    console.log("Found User Object:", foundUser); // Log the user object found in auction.users
+
+    if (foundUser) {
+      handleSetWinner(auction.id, selectedUserId, foundUser.user_name);
+    } else {
+      console.error("No user found with the selected user ID");
+    }
+  }}
+  isDisabled={!selectedUser[auction.id]}
+>
+  Set Winner
+</Button>
+
+                  {auction.userwinnerid && (
                     <Button
                       colorScheme="red"
-                      onClick={() => handleRemoveCooldown(auction.id)}
+                      onClick={() => handleRemoveWinner(auction.id)}
                     >
-                      Remove Cooldown
+                      Remove Winner
                     </Button>
                   )}
                   <Input
@@ -749,21 +1358,14 @@ const AuctionTable = () => {
                   >
                     Update Cooldown
                   </Button>
-                  <Button
-                    colorScheme="green"
-                    onClick={() =>
-                      handleSetWinner(
-                        auction.id,
-                        selectedUser[auction.id],
-                        auction.users.find(
-                          (user) => user.user_id === selectedUser[auction.id]
-                        )?.user_name
-                      )
-                    }
-                    isDisabled={!selectedUser[auction.id]}
-                  >
-                    Set Winner
-                  </Button>
+                  {auction.cooldown !== undefined && (
+                    <Button
+                      colorScheme="red"
+                      onClick={() => handleRemoveCooldown(auction.id)}
+                    >
+                      Remove Cooldown
+                    </Button>
+                  )}
                 </Flex>
               </Td>
             </Tr>
@@ -775,3 +1377,12 @@ const AuctionTable = () => {
 };
 
 export default AuctionTable;
+
+
+
+
+
+
+
+
+
